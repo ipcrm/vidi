@@ -1,0 +1,23 @@
+/* Dark mode — tokens are overridden in tokens.css when data-theme="dark".
+   This file adjusts mode-specific styling that can't be expressed via tokens. */
+
+:root[data-theme='dark'] .prose pre {
+  /* Ensure readable contrast — syntect emits inline color styles tuned for light.
+     When dark theme is requested at render time, the pipeline swaps to the
+     dark-friendly theme, so this is just a background nudge. */
+  background: #1d1a15;
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .prose table thead th {
+  border-bottom-color: var(--ink-dim);
+}
+
+:root[data-theme='dark'] .prose img {
+  /* Reduce the pop on photos — gentle filter only. */
+  filter: brightness(0.92);
+}
+
+:root[data-theme='dark'] .prose .alert {
+  background: rgba(255, 255, 255, 0.03);
+}

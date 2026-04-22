@@ -1,0 +1,72 @@
+/* Design tokens — colors, type scale, measure. */
+
+:root {
+  /* Typography — system serif stack. Source Serif 4 can be added later
+     by dropping .woff2 files into public/fonts and wiring @font-face. */
+  --font-serif: 'Source Serif 4', 'Source Serif Pro', 'Iowan Old Style',
+    'Palatino', 'Palatino Linotype', 'Georgia', ui-serif, serif;
+  --font-ui: -apple-system, 'Segoe UI', 'SF Pro Text', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', Menlo,
+    ui-monospace, monospace;
+
+  /* Measure: the prose column width.
+     `--measure-max` is the user-configurable upper bound (ch).
+     `--measure` scales with the viewport up to that bound so maximizing the
+     window widens the column instead of leaving empty paper on the sides. */
+  --measure-max: 92ch;
+  --measure: clamp(48ch, 80vw, var(--measure-max));
+  --leading: 1.65;
+  --scale-ratio: 1.25;
+
+  --fs-body: 1.0625rem;
+  --fs-h6: var(--fs-body);
+  --fs-h5: calc(var(--fs-body) * 1.125);
+  --fs-h4: calc(var(--fs-body) * var(--scale-ratio));
+  --fs-h3: calc(var(--fs-body) * var(--scale-ratio) * 1.125);
+  --fs-h2: calc(var(--fs-body) * var(--scale-ratio) * var(--scale-ratio));
+  --fs-h1: calc(var(--fs-body) * var(--scale-ratio) * var(--scale-ratio) * 1.2);
+
+  /* Newsprint palette — warm paper, near-black ink. */
+  --paper: #faf7f2;
+  --ink: #1a1814;
+  --ink-dim: #5a554c;
+  --rule: #d8d1c4;
+  --accent: #7a2f14;
+  --accent-fg: #fffaf3;
+  --accent-bg: rgba(122, 47, 20, 0.08);
+  --code-bg: #efeae0;
+  --chrome-bg: #f3ede2;
+  --chrome-hover: #ebe4d6;
+  --danger: #a23019;
+
+  /* Alert hues (light mode). */
+  --alert-note: #2f6feb;
+  --alert-tip: #1f883d;
+  --alert-important: #8250df;
+  --alert-warning: #bf8700;
+  --alert-caution: #cf222e;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --paper: #14120f;
+  --ink: #e8e3d8;
+  --ink-dim: #9a9287;
+  --rule: #2e2a23;
+  --accent: #d67b58;
+  --accent-fg: #14120f;
+  --accent-bg: rgba(214, 123, 88, 0.14);
+  --code-bg: #1d1a15;
+  --chrome-bg: #1b1813;
+  --chrome-hover: #25211b;
+  --danger: #e6674f;
+
+  --alert-note: #589df6;
+  --alert-tip: #3fb950;
+  --alert-important: #a371f7;
+  --alert-warning: #d2a44a;
+  --alert-caution: #f85149;
+
+  color-scheme: dark;
+}

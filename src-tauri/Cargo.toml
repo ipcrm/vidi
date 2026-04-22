@@ -1,0 +1,63 @@
+[package]
+name = "visum"
+version = "0.0.0"
+description = "Visum — a safe, newsprint-style Markdown reader."
+authors = ["Visum"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "visum_lib"
+path = "src/lib.rs"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "visum"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Markdown pipeline
+pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
+ammonia = "4"
+syntect = { version = "5", default-features = false, features = ["default-fancy"] }
+emojis = "0.6"
+base64 = "0.22"
+
+# Sources
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli", "charset"] }
+url = "2"
+ignore = "0.4"
+notify = "6"
+notify-debouncer-full = "0.3"
+
+# Persistence / utils
+tempfile = "3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "time", "sync"] }
+
+# Full-text search (M8)
+tantivy = { version = "0.22", default-features = false, features = ["mmap", "stopwords"] }
+
+# Errors / logging
+thiserror = "1"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+insta = { version = "1", features = ["yaml", "filters"] }
+wiremock = "0.6"
+pretty_assertions = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

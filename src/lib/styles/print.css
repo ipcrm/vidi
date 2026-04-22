@@ -1,0 +1,102 @@
+/* Print / save-as-PDF stylesheet.
+   Triggered by window.print() (⌘P). macOS's print dialog exposes a native
+   "Save as PDF" destination, which gives us PDF export for free. */
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0.8in 0.9in 1in;
+  }
+
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --paper: #ffffff;
+    --ink: #111111;
+    --ink-dim: #555555;
+    --rule: #cccccc;
+    --accent: #222222;
+    --accent-fg: #ffffff;
+    --accent-bg: #f0f0f0;
+    --code-bg: #f5f5f5;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  /* Hide chrome — target specific class names so the document's own
+     <header>/<aside> elements survive. */
+  .address-bar,
+  .sidebar,
+  .side-panel,
+  .findbar,
+  .theme-toggle,
+  .scrim,
+  .dialog,
+  .state.empty,
+  .shortcuts {
+    display: none !important;
+  }
+
+  /* Open up the page for the prose column. */
+  .app {
+    display: block !important;
+    height: auto !important;
+  }
+  .body {
+    display: block !important;
+  }
+  .main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .prose {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .prose p,
+  .prose li {
+    orphans: 3;
+    widows: 3;
+  }
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .prose pre,
+  .prose table,
+  .prose blockquote,
+  .prose figure,
+  .prose .math-display,
+  .prose .mermaid-source {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Hide external-image placeholders — we don't have the image. */
+  .prose .image-placeholder {
+    display: none !important;
+  }
+
+  /* Reveal the URL behind external links so the printout remains useful. */
+  .prose a[data-external='true']::after {
+    content: ' ⟨' attr(href) '⟩';
+    color: #555;
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  .prose .doc-header {
+    display: none !important;
+  }
+}

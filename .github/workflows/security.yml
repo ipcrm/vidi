@@ -1,0 +1,94 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Monday 06:00 UTC — weekly cadence, cheap to run.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cargo-audit:
+    name: cargo audit
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  pnpm-audit:
+    name: pnpm audit
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: pnpm install (for audit)
+        run: pnpm install --frozen-lockfile
+      - name: pnpm audit (high & above, production deps only)
+        run: pnpm audit --prod --audit-level high
+
+  tauri-permissions:
+    name: Tauri permissions audit
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject dangerous permissions
+        run: |
+          set -e
+          echo "== capabilities =="
+          cat src-tauri/capabilities/*.json
+
+          if grep -RiEn '"shell:(allow-execute|allow-spawn|allow-kill|allow-open)"' src-tauri/capabilities; then
+            echo "::error::Unsafe shell permission granted to the webview."
+            exit 1
+          fi
+
+          # fs plugin isn't currently wired in — fail if it ever lands without review.
+          if grep -RiEn '"fs:scope-|"fs:allow-' src-tauri/capabilities; then
+            echo "::error::fs plugin permission detected. Visum reads files through its own commands and should not grant fs:* to the webview."
+            exit 1
+          fi
+
+          echo "Permissions look OK."
+
+      - name: Assert CSP has no 'unsafe-eval' or remote script-src
+        run: |
+          set -e
+          CSP=$(node -e "console.log(require('./src-tauri/tauri.conf.json').app.security.csp)")
+          echo "csp: $CSP"
+          if echo "$CSP" | grep -qi "unsafe-eval"; then
+            echo "::error::CSP contains unsafe-eval."
+            exit 1
+          fi
+          if echo "$CSP" | grep -Eqi "script-src[^;]*https?:"; then
+            echo "::error::CSP allows remote scripts."
+            exit 1
+          fi
+
+  cargo-deny:
+    name: cargo deny (licenses + bans)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: src-tauri/Cargo.toml
+          command: check
+          arguments: --all-features

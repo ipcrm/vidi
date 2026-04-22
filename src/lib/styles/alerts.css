@@ -1,0 +1,71 @@
+/* GitHub-style alerts (NOTE / TIP / IMPORTANT / WARNING / CAUTION). */
+
+.prose .alert {
+  margin: 1.5em 0;
+  padding: 0.75em 1em 0.9em;
+  border-left: 4px solid var(--alert-note);
+  background: var(--chrome-bg);
+  border-radius: 0 4px 4px 0;
+  color: var(--ink);
+}
+
+.prose .alert > .alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+  font-family: var(--font-ui);
+  font-size: 0.8125em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--alert-note);
+  margin: 0 0 0.25em;
+}
+.prose .alert > .alert-title::before {
+  content: '';
+  display: inline-block;
+  width: 0.875em;
+  height: 0.875em;
+  background: currentColor;
+  border-radius: 2px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.prose .alert > p:last-child {
+  margin-bottom: 0;
+}
+
+.prose .alert-note {
+  border-left-color: var(--alert-note);
+}
+.prose .alert-note > .alert-title {
+  color: var(--alert-note);
+}
+
+.prose .alert-tip {
+  border-left-color: var(--alert-tip);
+}
+.prose .alert-tip > .alert-title {
+  color: var(--alert-tip);
+}
+
+.prose .alert-important {
+  border-left-color: var(--alert-important);
+}
+.prose .alert-important > .alert-title {
+  color: var(--alert-important);
+}
+
+.prose .alert-warning {
+  border-left-color: var(--alert-warning);
+}
+.prose .alert-warning > .alert-title {
+  color: var(--alert-warning);
+}
+
+.prose .alert-caution {
+  border-left-color: var(--alert-caution);
+}
+.prose .alert-caution > .alert-title {
+  color: var(--alert-caution);
+}

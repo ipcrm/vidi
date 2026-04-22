@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visum — a newsprint markdown reader</title>
+  <meta name="description" content="Visum is a local-first markdown reader with newsprint typography, tabs, full-text search, and a sanitized Rust rendering pipeline.">
+  <meta property="og:title" content="Visum — newsprint markdown reader">
+  <meta property="og:description" content="Local-first markdown reader for folders and GitHub URLs. Safe rendering via a Rust pipeline.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Navigation ------------------------------------------------------- -->
+    <aside class="nav" aria-label="Sections">
+      <a class="brand" href="#overview">
+        <img src="logo.png" alt="">
+        <span class="brand-name">Visum</span>
+      </a>
+
+      <h3>Start here</h3>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#quick-start">Quick start</a></li>
+      </ul>
+
+      <h3>Features</h3>
+      <ul>
+        <li><a href="#reading">Reading view</a></li>
+        <li><a href="#folders">Folders & sidebar</a></li>
+        <li><a href="#remote">Remote URLs & GitHub</a></li>
+        <li><a href="#tabs">Tabs</a></li>
+        <li><a href="#search">Search</a></li>
+        <li><a href="#bookmarks">Bookmarks & recents</a></li>
+        <li><a href="#print">Print / save as PDF</a></li>
+      </ul>
+
+      <h3>Reference</h3>
+      <ul>
+        <li><a href="#markdown">Supported markdown</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+      </ul>
+
+      <h3>Project</h3>
+      <ul>
+        <li><a href="#privacy">Privacy & safety</a></li>
+        <li><a href="#license">License</a></li>
+        <li><a href="https://github.com/ipcrm/visum">GitHub ↗</a></li>
+      </ul>
+    </aside>
+
+    <main>
+
+      <!-- Hero ----------------------------------------------------------- -->
+      <section class="hero" id="overview">
+        <p class="eyebrow">Markdown reader</p>
+        <h1>Read markdown like it's print.</h1>
+        <p class="tagline">
+          A desktop reader for local folders, GitHub repos, and any markdown
+          URL — rendered through a sanitized Rust pipeline. Offline-first.
+          Data stays on your machine.
+        </p>
+        <a class="cta" href="https://github.com/ipcrm/visum/releases">Download latest release →</a>
+      </section>
+
+      <!-- Install -------------------------------------------------------- -->
+      <section id="install">
+        <h2>Install</h2>
+        <p>
+          Grab the build for your platform from
+          <a href="https://github.com/ipcrm/visum/releases">GitHub Releases</a>.
+        </p>
+
+        <div class="download-grid">
+          <div class="card">
+            <strong>macOS</strong>
+            <span><code>.dmg</code> — Apple Silicon and Intel</span>
+          </div>
+          <div class="card">
+            <strong>Windows</strong>
+            <span><code>.msi</code> installer or <code>.exe</code> (NSIS)</span>
+          </div>
+          <div class="card">
+            <strong>Linux</strong>
+            <span><code>.deb</code> or <code>.AppImage</code></span>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>First-run on macOS:</strong>
+          builds are unsigned. Right-click the app and choose
+          <strong>Open</strong> the first time to bypass Gatekeeper; macOS
+          remembers the decision afterwards.
+        </div>
+      </section>
+
+      <!-- Quick start ---------------------------------------------------- -->
+      <section id="quick-start">
+        <h2>Quick start</h2>
+        <ol>
+          <li>Launch Visum.</li>
+          <li>
+            Press <kbd>⌘O</kbd> to open a folder of markdown files, or paste
+            a URL like
+            <code>github.com/owner/repo/blob/main/README.md</code>
+            into the address bar and press <strong>Open</strong>.
+          </li>
+          <li>
+            Use the left sidebar to switch files or jump to a section. Use
+            <kbd>⌘F</kbd> to find within the current doc and
+            <kbd>⌘⇧F</kbd> to search across the whole folder.
+          </li>
+          <li>
+            Press <kbd>⌘T</kbd> for a new tab — each tab has its own
+            folder, document, and reading position.
+          </li>
+        </ol>
+
+        <figure>
+          <img src="screenshots/reader.png" alt="Visum reader view with a rendered README">
+          <figcaption>Newsprint typography, serif body copy, and dark mode follow your OS theme.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Reading view --------------------------------------------------- -->
+      <section id="reading">
+        <h2>Reading view</h2>
+        <p>
+          The reader is the centerpiece. Text is set in
+          <strong>Source Serif 4</strong> with hyphenation, hanging
+          punctuation, and old-style numerals enabled by default — the
+          goal is that running prose feels like a book, not a web page.
+        </p>
+        <ul>
+          <li>
+            <strong>Adjustable column width.</strong> Hover either edge of
+            the column and drag — both edges highlight as you move, and the
+            column rebalances around the center line. Double-click an edge
+            to reset to the default measure (92ch). The numeric value is
+            also in <a href="#settings">Settings</a>.
+          </li>
+          <li>
+            <strong>Dark mode.</strong> Follows <code>prefers-color-scheme</code>
+            automatically. Toggle manually with the moon/sun control in the
+            bottom-right corner.
+          </li>
+          <li>
+            <strong>Reading position</strong> is remembered per source. Come
+            back to a long doc and you'll land where you left off.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Folders -------------------------------------------------------- -->
+      <section id="folders">
+        <h2>Folders &amp; the sidebar</h2>
+        <p>
+          Open a folder (<kbd>⌘O</kbd>) and the left sidebar fills with two
+          collapsible sections:
+        </p>
+        <ul>
+          <li>
+            <strong>Files</strong> — a recursive tree of every
+            <code>.md</code> / <code>.markdown</code> file. Respects
+            <code>.gitignore</code>, skips <code>.git</code> and
+            <code>node_modules</code>. Filter input for quick lookups.
+          </li>
+          <li>
+            <strong>Contents</strong> — a live table of contents for the
+            active document, built from heading text with stable slug
+            anchors. Click any entry to smooth-scroll to that heading.
+          </li>
+        </ul>
+        <p>
+          Each section takes half the remaining height by default. Collapse
+          one and the other expands to fill. A file-system watcher keeps
+          the tree in sync with disk changes and re-renders the active doc
+          when it's saved externally.
+        </p>
+        <figure>
+          <img src="screenshots/sidebar-toc.png" alt="Sidebar with Files and Contents sections visible">
+          <figcaption>Files (top) and Contents (bottom). Either section can be collapsed.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Remote --------------------------------------------------------- -->
+      <section id="remote">
+        <h2>Remote URLs &amp; GitHub</h2>
+        <p>Paste any of these into the address bar:</p>
+        <ul>
+          <li><code>https://github.com/owner/repo</code> — loads <code>README.md</code> from <code>HEAD</code>.</li>
+          <li><code>https://github.com/owner/repo/blob/main/docs/foo.md</code></li>
+          <li><code>https://raw.githubusercontent.com/owner/repo/main/path.md</code></li>
+          <li><code>https://gist.github.com/user/id</code> or a gist raw URL</li>
+          <li>Any other URL whose body is markdown</li>
+        </ul>
+        <p>
+          GitHub URLs are normalized to their raw-content equivalents so
+          relative links (<code>./other.md</code>, <code>../api.md</code>)
+          resolve correctly. External links and external images both prompt
+          before they touch the network — decisions can be remembered per
+          host in Settings.
+        </p>
+      </section>
+
+      <!-- Tabs ----------------------------------------------------------- -->
+      <section id="tabs">
+        <h2>Tabs</h2>
+        <p>
+          Press <kbd>⌘T</kbd> to open a new tab. Each tab carries its own
+          folder tree, active document, loading state, and reading
+          position. Tabs appear above the address bar only when there are
+          two or more open — a single tab keeps the chrome quiet.
+        </p>
+        <ul>
+          <li>
+            <strong>Overflow picker.</strong> When tabs don't fit, a
+            <code>⌄ N</code> chip appears at the right end; clicking it
+            opens a searchable list of every open tab.
+          </li>
+          <li>
+            <strong>Middle-click</strong> a tab to close it. <kbd>⌘W</kbd>
+            closes the current. <kbd>⌘⇥</kbd> cycles forward,
+            <kbd>⌘⇧⇥</kbd> backward. <kbd>⌘1</kbd>&hellip;<kbd>⌘9</kbd>
+            jumps by index.
+          </li>
+        </ul>
+        <figure>
+          <img src="screenshots/tabs.png" alt="Multiple tabs open with an overflow chip">
+          <figcaption>Tabs share the trusted-hosts list; everything else is per-tab.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Search --------------------------------------------------------- -->
+      <section id="search">
+        <h2>Search</h2>
+        <p>
+          Two levels of search, both in-app — no external index, no
+          network round-trip.
+        </p>
+        <ul>
+          <li>
+            <strong>Find in document</strong> (<kbd>⌘F</kbd>) opens a
+            floating bar anchored to the reader. Matches highlight in
+            yellow; Enter / Shift+Enter cycle through them; Escape closes.
+          </li>
+          <li>
+            <strong>Full-text search across the folder</strong>
+            (<kbd>⌘⇧F</kbd>) uses a Tantivy index built in memory when a
+            folder opens. Title, body, and path are all searchable; hits
+            show a snippet with the term highlighted.
+          </li>
+        </ul>
+        <figure>
+          <img src="screenshots/search.png" alt="Folder-wide search panel with hits">
+          <figcaption>The index is volatile — it's rebuilt on each folder open.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Bookmarks ------------------------------------------------------ -->
+      <section id="bookmarks">
+        <h2>Bookmarks &amp; recents</h2>
+        <p>
+          <kbd>⌘D</kbd> adds the current document to Bookmarks. <kbd>⌘B</kbd>
+          opens the bookmarks panel. <kbd>⌘Y</kbd> opens the recent-docs
+          panel — the last 50 opened documents, with relative times.
+        </p>
+        <p>
+          Both lists live in a JSON file under your platform's app-data
+          directory. Nothing leaves the machine.
+        </p>
+      </section>
+
+      <!-- Print / PDF ---------------------------------------------------- -->
+      <section id="print">
+        <h2>Print / save as PDF</h2>
+        <p>
+          Press <kbd>⌘P</kbd> to open the print dialog. The print
+          stylesheet hides every piece of app chrome (address bar,
+          sidebars, panels, find bar) and opens up the prose column to
+          fill the page. On macOS, the print dialog's
+          <strong>PDF → Save as PDF</strong> menu gives you a portable
+          archive version for free.
+        </p>
+        <p>
+          External-image placeholders are omitted from print (we don't have
+          the pixels), and external links are expanded inline with their
+          URLs in angle brackets so the printout stays self-contained.
+        </p>
+      </section>
+
+      <!-- Supported markdown --------------------------------------------- -->
+      <section id="markdown">
+        <h2>Supported markdown</h2>
+        <p>
+          All of GitHub-flavored markdown plus a few extras:
+        </p>
+        <ul class="feature-list">
+          <li><strong>GFM core</strong><span>Tables, task lists, strikethrough, autolinks, footnotes.</span></li>
+          <li><strong>Alerts</strong><span><code>&gt; [!NOTE]</code>, <code>[!TIP]</code>, <code>[!IMPORTANT]</code>, <code>[!WARNING]</code>, <code>[!CAUTION]</code> rendered as semantic <code>&lt;aside&gt;</code>s.</span></li>
+          <li><strong>Math</strong><span>Inline <code>$x^2$</code> and display <code>$$&hellip;$$</code> rendered with KaTeX (lazy-loaded).</span></li>
+          <li><strong>Mermaid</strong><span>Fenced <code>```mermaid</code> blocks render as SVG (lazy-loaded, sandboxed).</span></li>
+          <li><strong>Syntax highlighting</strong><span>Every common language via <a href="https://github.com/trishume/syntect">syntect</a> — inline styles, no JS.</span></li>
+          <li><strong>Emoji shortcodes</strong><span><code>:smile:</code> → &#x1F604; (only outside code blocks).</span></li>
+          <li><strong>Smart punctuation</strong><span>Typographic quotes, en/em dashes, ellipses where the source has them.</span></li>
+          <li><strong>Raw HTML</strong><span>Allowed through a strict sanitizer. Relative <code>src</code>s on <code>&lt;img&gt;</code> tags are rewritten to <code>asset://</code>.</span></li>
+        </ul>
+      </section>
+
+      <!-- Settings ------------------------------------------------------- -->
+      <section id="settings">
+        <h2>Settings</h2>
+        <p>
+          Open with <kbd>⌘,</kbd>. Every setting persists to a JSON file in
+          the app-data directory and takes effect live.
+        </p>
+        <table>
+          <thead>
+            <tr><th>Setting</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Theme</td><td>System / light / dark.</td></tr>
+            <tr><td>Measure</td><td>Column width cap in <code>ch</code>. Also adjustable by dragging the column edge.</td></tr>
+            <tr><td>Font scale</td><td>Multiplies the body size from 0.85× to 1.25×.</td></tr>
+            <tr><td>Drop caps</td><td>Enables a newsprint-style drop cap on the first paragraph after <code>h1</code>.</td></tr>
+            <tr><td>Render math</td><td>Toggle KaTeX globally.</td></tr>
+            <tr><td>Render mermaid</td><td>Toggle Mermaid globally.</td></tr>
+            <tr><td>Trusted hosts</td><td>List of hosts approved for external images / links. Remove any entry to re-prompt.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Shortcuts ------------------------------------------------------ -->
+      <section id="shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <table class="shortcut-table">
+          <thead>
+            <tr><th>Key</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><kbd>⌘O</kbd></td><td>Open folder&hellip;</td></tr>
+            <tr><td><kbd>⌘T</kbd></td><td>New tab</td></tr>
+            <tr><td><kbd>⌘W</kbd></td><td>Close current tab</td></tr>
+            <tr><td><kbd>⌘⇥</kbd> / <kbd>⌘⇧⇥</kbd></td><td>Next / previous tab</td></tr>
+            <tr><td><kbd>⌘1</kbd>&hellip;<kbd>⌘9</kbd></td><td>Jump to tab N</td></tr>
+            <tr><td><kbd>⌘\</kbd></td><td>Toggle sidebar</td></tr>
+            <tr><td><kbd>⌘F</kbd></td><td>Find in document</td></tr>
+            <tr><td><kbd>⌘⇧F</kbd></td><td>Search across folder</td></tr>
+            <tr><td><kbd>⌘B</kbd></td><td>Bookmarks panel</td></tr>
+            <tr><td><kbd>⌘D</kbd></td><td>Bookmark current document</td></tr>
+            <tr><td><kbd>⌘Y</kbd></td><td>Recent documents panel</td></tr>
+            <tr><td><kbd>⌘,</kbd></td><td>Settings</td></tr>
+            <tr><td><kbd>⌘P</kbd></td><td>Print / save as PDF</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Privacy -------------------------------------------------------- -->
+      <section id="privacy">
+        <h2>Privacy &amp; safety</h2>
+        <p>
+          Visum is local-first by design. There is no account, no cloud, no
+          analytics, no telemetry. The only outbound network requests are:
+        </p>
+        <ul>
+          <li>Fetching a markdown URL when you paste one in the address bar.</li>
+          <li>Loading an external image after you've confirmed it (once, or once per host).</li>
+          <li>Opening an external link in your OS browser after you've confirmed it.</li>
+        </ul>
+
+        <h3>Rendering pipeline</h3>
+        <p>
+          Every markdown document goes through the same Rust-side pipeline
+          before any HTML reaches the webview:
+        </p>
+        <ol>
+          <li><strong>Parse</strong> with <a href="https://github.com/pulldown-cmark/pulldown-cmark">pulldown-cmark</a> (GFM options enabled).</li>
+          <li><strong>Heading IDs</strong> slugify from text so anchor links work.</li>
+          <li><strong>Alerts</strong> rewriter turns <code>&gt; [!NOTE]</code> into semantic <code>&lt;aside&gt;</code>.</li>
+          <li><strong>Emoji</strong> shortcodes are expanded (outside code).</li>
+          <li><strong>Math</strong> placeholders emitted for client-side KaTeX.</li>
+          <li><strong>Mermaid</strong> placeholders emitted for client-side rendering; output SVG is passed through DOMPurify.</li>
+          <li><strong>Syntect</strong> highlights fenced code blocks with inline styles.</li>
+          <li><strong>Links / images</strong> are classified (internal / external / asset / anchor) and annotated so the UI can route or prompt.</li>
+          <li><strong>Raw HTML <code>&lt;img src&gt;</code></strong> in the source is normalized the same way.</li>
+          <li><strong>Ammonia</strong> sanitizes the final HTML with a strict allowlist: no scripts, no event handlers, no <code>javascript:</code>, no <code>http:</code> image sources (only <code>https:</code>, <code>asset:</code>, and <code>data:image/</code>).</li>
+        </ol>
+        <p>
+          Every <code>&lt;style&gt;</code> attribute is filtered down to the
+          exact five properties <code>syntect</code> emits. Every
+          <code>data-</code> attribute is on a named allowlist. Every URL
+          scheme is explicit. Nothing about the sanitizer is derived from
+          string matching in the webview.
+        </p>
+      </section>
+
+      <!-- License -------------------------------------------------------- -->
+      <section id="license">
+        <h2>License</h2>
+        <p>
+          Visum is MIT-licensed — see
+          <a href="https://github.com/ipcrm/visum/blob/main/LICENSE">LICENSE</a>.
+        </p>
+        <p>
+          Bundled fonts: <strong>Source Serif 4</strong>
+          (<a href="https://github.com/adobe-fonts/source-serif/blob/release/LICENSE.md">OFL-1.1</a>, Adobe)
+          and <strong>JetBrains Mono</strong>
+          (<a href="https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt">OFL-1.1</a>, JetBrains).
+          Full license texts ship with the app under
+          <code>public/fonts/*-LICENSE.txt</code>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Visum ·
+          <a href="https://github.com/ipcrm/visum">source on GitHub</a> ·
+          <a href="https://github.com/ipcrm/visum/releases">releases</a> ·
+          <a href="https://github.com/ipcrm/visum/issues">issues</a>
+        </p>
+      </footer>
+
+    </main>
+  </div>
+</body>
+</html>

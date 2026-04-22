@@ -1,0 +1,29 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock.bk
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Env / local
+.env
+.env.local
+.vscode/
+.idea/
+.claude/
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.profraw
+
+# Snapshot review files (accepted snapshots are committed; .new/.pending are transient)
+**/*.snap.new
+**/*.pending-snap

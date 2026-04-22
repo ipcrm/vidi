@@ -1,6 +1,6 @@
 # Visum
 
-![Visum reader rendering a markdown document](./docs/screenshots/reader.png)
+![Visum rendering The Colophon Tribune, a newspaper-style markdown sample, with sidebar, table of contents, and pull-quote](./docs/screenshots/reader.png)
 
 > **Visum** /ˈwiː.sũː/ · Latin, neuter past participle of *vidēre*, "to see."
 > *A thing seen; a sight, a view, a vision.*

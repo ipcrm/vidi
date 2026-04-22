@@ -1,5 +1,7 @@
 # Visum
 
+![Visum reader rendering a markdown document](./docs/screenshots/reader.png)
+
 > **Visum** /ˈwiː.sũː/ · Latin, neuter past participle of *vidēre*, "to see."
 > *A thing seen; a sight, a view, a vision.*
 
@@ -20,6 +22,22 @@ Builds are unsigned; on macOS, right-click the app the first time and choose
 ## Documentation
 
 Full docs at [ipcrm.github.io/visum](https://ipcrm.github.io/visum).
+
+## Try it
+
+Clone the repo and open the bundled demo content:
+
+```sh
+git clone https://github.com/ipcrm/visum
+```
+
+In Visum, press <kbd>⌘O</kbd> and pick the repo's
+[`samples/`](./samples) directory. It contains a small fictional project
+that exercises every rendering feature — GFM tables and task lists, alerts,
+KaTeX math, Mermaid diagrams, syntax highlighting across several languages,
+footnotes, nested folders, relative image paths, raw HTML images, a
+deliberately broken image to show the fallback chip, and an external image
+to exercise the load-prompt.
 
 ## Features
 

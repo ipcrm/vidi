@@ -1,8 +1,6 @@
 # Visum
 
-Newsprint-style markdown reader. Open a local folder or paste a GitHub URL —
-documents render through a sanitized Rust pipeline, with no third-party scripts
-reaching the page. Offline-first, local data only.
+Newsprint-style markdown reader that runs locally.
 
 ## Download
 

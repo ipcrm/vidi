@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" width="640" height="220">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1a1814"/>
+    </marker>
+  </defs>
+  <rect width="640" height="220" fill="#faf7f2"/>
+
+  <!-- Boxes -->
+  <g font-family="Iowan Old Style, Georgia, serif" font-size="14" text-anchor="middle">
+    <g>
+      <rect x="20" y="80" width="110" height="60" rx="6" fill="#fff" stroke="#7a2f14" stroke-width="1.5"/>
+      <text x="75" y="105">Ingest</text>
+      <text x="75" y="125" font-size="11" fill="#5a554c">HTTP / stream</text>
+    </g>
+    <g>
+      <rect x="170" y="80" width="110" height="60" rx="6" fill="#fff" stroke="#7a2f14" stroke-width="1.5"/>
+      <text x="225" y="105">Validate</text>
+      <text x="225" y="125" font-size="11" fill="#5a554c">schema</text>
+    </g>
+    <g>
+      <rect x="320" y="80" width="110" height="60" rx="6" fill="#fff" stroke="#7a2f14" stroke-width="1.5"/>
+      <text x="375" y="105">Transform</text>
+      <text x="375" y="125" font-size="11" fill="#5a554c">map + enrich</text>
+    </g>
+    <g>
+      <rect x="470" y="80" width="110" height="60" rx="6" fill="#f3ede2" stroke="#7a2f14" stroke-width="1.5"/>
+      <text x="525" y="105">Persist</text>
+      <text x="525" y="125" font-size="11" fill="#5a554c">postgres</text>
+    </g>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#1a1814" stroke-width="1.5" fill="none">
+    <line x1="130" y1="110" x2="166" y2="110" marker-end="url(#arrow)"/>
+    <line x1="280" y1="110" x2="316" y2="110" marker-end="url(#arrow)"/>
+    <line x1="430" y1="110" x2="466" y2="110" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="320" y="40" text-anchor="middle" font-family="Iowan Old Style, Georgia, serif" font-size="16" font-style="italic" fill="#1a1814">Flux ingest pipeline</text>
+  <text x="320" y="195" text-anchor="middle" font-family="Iowan Old Style, Georgia, serif" font-size="11" fill="#5a554c">Fig. 1 — four-stage flow from ingest to storage</text>
+</svg>

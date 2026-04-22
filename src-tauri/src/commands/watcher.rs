@@ -7,7 +7,7 @@ use crate::AppState;
 use notify::{RecursiveMode, Watcher};
 use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
@@ -36,12 +36,21 @@ impl Default for WatcherRegistry {
     }
 }
 
+/// One coalesced notification per debouncer tick. `paths` is the deduplicated
+/// set of paths that changed within the window (limited to a sane size to
+/// keep the IPC payload small during mass-change events like a git pull).
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct ChangeEvent {
-    path: PathBuf,
-    kind: String,
+    /// Deduplicated changed paths (capped to `MAX_PATHS_PER_EVENT`).
+    paths: Vec<PathBuf>,
+    /// True when we truncated — the frontend should treat the tree as wholly dirty.
+    truncated: bool,
+    /// Total number of distinct paths before truncation.
+    total: usize,
 }
+
+const MAX_PATHS_PER_EVENT: usize = 64;
 
 #[tauri::command(rename_all = "camelCase")]
 pub async fn watch_folder(
@@ -63,16 +72,32 @@ pub async fn watch_folder(
         None,
         move |res: DebounceEventResult| match res {
             Ok(events) => {
-                for ev in events {
-                    let kind = format!("{:?}", ev.event.kind);
+                // Coalesce all paths into a deduplicated set — a branch switch
+                // or `git pull` touching hundreds of files would otherwise
+                // emit hundreds of IPC events, each triggering a frontend
+                // tree-refresh.
+                let mut unique: HashSet<PathBuf> = HashSet::new();
+                for ev in &events {
                     for p in &ev.paths {
-                        let payload = ChangeEvent {
-                            path: p.clone(),
-                            kind: kind.clone(),
-                        };
-                        let _ = app_handle.emit("folder://changed", payload);
+                        unique.insert(p.clone());
                     }
                 }
+                if unique.is_empty() {
+                    return;
+                }
+                let total = unique.len();
+                let truncated = total > MAX_PATHS_PER_EVENT;
+                let paths: Vec<PathBuf> = if truncated {
+                    unique.into_iter().take(MAX_PATHS_PER_EVENT).collect()
+                } else {
+                    unique.into_iter().collect()
+                };
+                let payload = ChangeEvent {
+                    paths,
+                    truncated,
+                    total,
+                };
+                let _ = app_handle.emit("folder://changed", payload);
             }
             Err(errs) => {
                 for e in errs {

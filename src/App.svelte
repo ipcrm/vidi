@@ -135,29 +135,55 @@
     };
   });
 
+  // Coalesce multiple watcher events into at most one tree-refresh and one
+  // active-doc re-render per burst. Mass-change events (git pull / branch
+  // switch / IDE save-all) were causing hundreds of listFolder calls per
+  // second, pinning the CPU.
+  const refreshTreeDebounced = debounce(async () => {
+    const tree = session.tree;
+    if (!tree) return;
+    try {
+      const fresh = await ipc.listFolder(tree.root);
+      session.setTree(fresh);
+    } catch {
+      // leave tree as-is
+    }
+  }, 400);
+
+  const reRenderActiveDocDebounced = debounce(async () => {
+    const src = session.source;
+    if (!src || src.kind !== 'localFile') return;
+    await openSource(src, { silent: true });
+  }, 300);
+
   $effect(() => {
     (async () => {
-      unlisten = await listen<{ path: string; kind: string }>(
-        'folder://changed',
-        async (ev) => {
-          const src = session.source;
-          if (src?.kind === 'localFile' && ev.payload.path === src.path) {
-            // The active doc changed on disk — re-render.
-            await openSource(src, { silent: true });
-          } else if (session.tree) {
-            // Some other file in the tree changed — refresh tree listing.
-            try {
-              const fresh = await ipc.listFolder(session.tree.root);
-              session.setTree(fresh);
-            } catch {
-              // leave tree as-is
-            }
-          }
+      unlisten = await listen<{
+        paths: string[];
+        truncated: boolean;
+        total: number;
+      }>('folder://changed', (ev) => {
+        const src = session.source;
+        const activePath = src?.kind === 'localFile' ? src.path : null;
+        const paths = ev.payload.paths;
+
+        // If the active doc is among the changed paths, schedule a re-render.
+        if (activePath && paths.includes(activePath)) {
+          reRenderActiveDocDebounced();
         }
-      );
+
+        // Any change touches the tree — schedule a refresh. The debounce
+        // keeps rapid bursts (git pull, branch switch) to a single
+        // `listFolder` call per ~400ms window.
+        if (session.tree) {
+          refreshTreeDebounced();
+        }
+      });
     })();
 
     return () => {
+      refreshTreeDebounced.cancel();
+      reRenderActiveDocDebounced.cancel();
       if (unlisten) {
         unlisten();
         unlisten = null;

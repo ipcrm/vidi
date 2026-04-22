@@ -1,5 +1,8 @@
 # Visum
 
+> **Visum** /ˈwiː.sũː/ · Latin, neuter past participle of *vidēre*, "to see."
+> *A thing seen; a sight, a view, a vision.*
+
 Newsprint-style markdown reader that runs locally.
 
 ## Download

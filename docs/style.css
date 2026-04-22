@@ -214,8 +214,33 @@ li + li { margin-top: 0.2em; }
   font-style: italic;
   font-size: 1.375rem;
   color: var(--ink-dim);
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   max-width: 42ch;
+}
+
+.etymology {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--ink-dim);
+  border-left: 2px solid var(--rule);
+  padding: 0.25rem 0 0.25rem 0.875rem;
+  margin: 0 0 2rem;
+  max-width: 60ch;
+  line-height: 1.55;
+}
+.etymology strong {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+.etymology .pron {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--ink);
+  padding: 0 0.15em;
+}
+.etymology em {
+  font-style: italic;
 }
 
 .download-grid {

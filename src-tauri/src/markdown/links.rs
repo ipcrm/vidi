@@ -540,9 +540,6 @@ mod tests {
     fn asset_url_uses_uri_component_encoding() {
         let u = asset_url(&PathBuf::from("/Users/x/a b/c.png"));
         // Space must be %20, not '+'; slashes must be %2F.
-        assert_eq!(
-            u,
-            "asset://localhost/%2FUsers%2Fx%2Fa%20b%2Fc.png"
-        );
+        assert_eq!(u, "asset://localhost/%2FUsers%2Fx%2Fa%20b%2Fc.png");
     }
 }

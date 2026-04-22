@@ -32,9 +32,7 @@ pub fn rewrite<'a>(events: Vec<Event<'a>>, base: &ResolvedBase) -> Vec<Event<'a>
                 if rewritten == s.as_ref() {
                     out.push(Event::InlineHtml(s));
                 } else {
-                    out.push(Event::InlineHtml(CowStr::Boxed(
-                        rewritten.into_boxed_str(),
-                    )));
+                    out.push(Event::InlineHtml(CowStr::Boxed(rewritten.into_boxed_str())));
                 }
             }
             other => out.push(other),
@@ -79,11 +77,7 @@ fn find_img_open(s: &str) -> Option<usize> {
         let at = i + rel;
         // Ensure the next char is whitespace, `>`, or `/` (not e.g. `<images`).
         match lower.as_bytes().get(at + 4) {
-            Some(c)
-                if c.is_ascii_whitespace() || *c == b'>' || *c == b'/' =>
-            {
-                return Some(at)
-            }
+            Some(c) if c.is_ascii_whitespace() || *c == b'>' || *c == b'/' => return Some(at),
             None => return Some(at),
             _ => {
                 i = at + 4;
@@ -148,11 +142,7 @@ fn rewrite_img_tag(tag: &str, base: &ResolvedBase) -> String {
 /// Find byte range of the value of an attribute named `name` (lowercase).
 /// Returns (value_start, value_end) where value is the INNER string
 /// (between the quotes).
-fn find_attr_value(
-    lower: &str,
-    original: &str,
-    name: &str,
-) -> Option<(usize, usize)> {
+fn find_attr_value(lower: &str, original: &str, name: &str) -> Option<(usize, usize)> {
     let _ = original;
     // Look for whitespace + name + '='
     let needle = format!("{name}=");
@@ -195,9 +185,9 @@ fn is_absolute_scheme(s: &str) -> bool {
     if let Some(idx) = s.find(':') {
         let scheme = &s[..idx];
         !scheme.is_empty()
-            && scheme.chars().all(|c| {
-                c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.'
-            })
+            && scheme
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.')
     } else {
         false
     }

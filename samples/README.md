@@ -21,6 +21,11 @@ footnotes, relative image paths, internal links, and external links.
 - [Architecture](./architecture.md)
 - [Changelog](./changelog.md)
 - [Random thoughts](./notes/random-thoughts.md)
+- **[The Colophon Tribune](./the-colophon-tribune.md)** — a whole
+  fictional newspaper in one document: lead story, feature, editorial,
+  briefs, letters, market notes, classifieds, and a colophon. Turn on
+  **drop caps** in Settings (⌘,) before reading — that's what this
+  sample was built for.
 
 ## Overview
 

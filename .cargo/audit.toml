@@ -1,0 +1,61 @@
+# cargo-audit configuration.
+#
+# Only add entries here for advisories we've triaged as unfixable at the
+# moment — transitive deps through upstream crates we don't control. Every
+# ignore MUST include a comment explaining *why* it's accepted. If an entry
+# can be removed because the upstream crate updated, delete it.
+#
+# CI runs `rustsec/audit-check` which respects this file.
+
+[advisories]
+ignore = [
+    # --- gtk-rs / GTK3 bindings (RUSTSEC-2024-04xx family). --------------
+    # Transitive through tauri-runtime-wry on Linux. Tauri 2.x still uses
+    # GTK3; GTK4 migration is tracked upstream. Not an attacker-exploitable
+    # CVE — the advisory is "no longer maintained."
+    "RUSTSEC-2024-0411",  # gdkwayland-sys
+    "RUSTSEC-2024-0412",  # gdk
+    "RUSTSEC-2024-0413",  # atk
+    "RUSTSEC-2024-0414",  # gdkx11-sys
+    "RUSTSEC-2024-0415",  # gtk
+    "RUSTSEC-2024-0416",  # atk-sys
+    "RUSTSEC-2024-0417",  # gdkx11
+    "RUSTSEC-2024-0418",  # gdk-sys
+    "RUSTSEC-2024-0419",  # gtk3-macros
+    "RUSTSEC-2024-0420",  # gtk-sys
+    "RUSTSEC-2024-0429",  # glib (GTK3 transitive)
+
+    # --- bincode 1.x --------------------------------------------------
+    # Transitive via syntect 5.x. Syntect hasn't migrated to bincode 2.
+    "RUSTSEC-2025-0141",  # bincode
+
+    # --- Tauri utilities parsing CSS selectors ------------------------
+    # fxhash + selectors + kuchikiki + phf_generator(rand 0.7) pulled in
+    # through tauri-utils. We don't touch the HTML/CSS parser in the
+    # Tauri config path; it's build-time metadata.
+    "RUSTSEC-2025-0057",  # fxhash — unmaintained
+    "RUSTSEC-2026-0097",  # rand 0.7 — unsound custom-rng path, not triggered
+
+    # --- widely-used older macro/utility crates -----------------------
+    "RUSTSEC-2024-0370",  # proc-macro-error — unmaintained, macro-side
+    "RUSTSEC-2024-0384",  # instant — unmaintained, time measurement
+
+    # --- unic-* family (Unicode data tables) --------------------------
+    # Transitive via pulldown-cmark's smart-punctuation path. Not
+    # directly used by us.
+    "RUSTSEC-2025-0075",  # unic-char-range
+    "RUSTSEC-2025-0080",  # unic-common
+    "RUSTSEC-2025-0081",  # unic-char-property
+    "RUSTSEC-2025-0098",  # unic-ucd-version
+    "RUSTSEC-2025-0100",  # unic-ucd-ident
+
+    # --- yaml-rust -----------------------------------------------------
+    # Transitive. No viable replacement in our tree's feature graph.
+    "RUSTSEC-2024-0320",  # yaml-rust
+
+    # --- lru 0.12.5 ----------------------------------------------------
+    # Transitive via tantivy 0.22. Advisory is about IterMut unsoundness;
+    # we don't use IterMut on tantivy's internal caches. Upstream
+    # tantivy 0.23 addresses it.
+    "RUSTSEC-2026-0002",  # lru
+]

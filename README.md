@@ -1,16 +1,16 @@
-# Visum
+# Vidi
 
-![Visum rendering The Colophon Tribune, a newspaper-style markdown sample, with sidebar, table of contents, and pull-quote](./docs/screenshots/reader.png)
+![Vidi rendering The Colophon Tribune, a newspaper-style markdown sample, with sidebar, table of contents, and pull-quote](./docs/screenshots/reader.png)
 
-> **Visum** /ˈwiː.sũː/ · Latin, neuter past participle of *vidēre*, "to see."
-> *A thing seen; a sight, a view, a vision.*
+> **Vidi** /ˈwiː.diː/ · Latin, first-person perfect of *vidēre*, "to see."
+> *"I saw."* The viewing half of Caesar's *veni, vidi, vici*.
 
 Newsprint-style markdown reader that runs locally.
 
 ## Download
 
 Get the latest build for your platform from
-[GitHub Releases](https://github.com/ipcrm/visum/releases):
+[GitHub Releases](https://github.com/ipcrm/vidi/releases):
 
 - **macOS** — `.dmg` (Apple Silicon and Intel builds)
 - **Windows** — `.msi` installer or portable `.exe`
@@ -21,17 +21,17 @@ Builds are unsigned; on macOS, right-click the app the first time and choose
 
 ## Documentation
 
-Full docs at [ipcrm.github.io/visum](https://ipcrm.github.io/visum).
+Full docs at [ipcrm.github.io/vidi](https://ipcrm.github.io/vidi).
 
 ## Try it
 
 Clone the repo and open the bundled demo content:
 
 ```sh
-git clone https://github.com/ipcrm/visum
+git clone https://github.com/ipcrm/vidi
 ```
 
-In Visum, press <kbd>⌘O</kbd> and pick the repo's
+In Vidi, press <kbd>⌘O</kbd> and pick the repo's
 [`samples/`](./samples) directory. It contains a small fictional project
 that exercises every rendering feature — GFM tables and task lists, alerts,
 KaTeX math, Mermaid diagrams, syntax highlighting across several languages,

@@ -1,6 +1,6 @@
 # Random thoughts
 
-A kitchen sink: every rendering feature Visum supports, crammed into one
+A kitchen sink: every rendering feature Vidi supports, crammed into one
 document so you can verify them at a glance.
 
 ## Emoji
@@ -197,7 +197,7 @@ rewriter handles):
 
 ## Broken image fallback
 
-This points at a file that doesn't exist. Visum should show a ⚠ chip with
+This points at a file that doesn't exist. Vidi should show a ⚠ chip with
 the full path, not a silent broken-image icon:
 
 ![intentionally missing](./images/does-not-exist.png)

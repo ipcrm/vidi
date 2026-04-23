@@ -2,11 +2,24 @@
   interface Props {
     onOpenUrl: (url: string) => void;
     onOpenFolder: () => void;
+    onBack: () => void;
+    onForward: () => void;
+    canGoBack: boolean;
+    canGoForward: boolean;
     title: string | null;
     busy: boolean;
   }
 
-  const { onOpenUrl, onOpenFolder, title, busy }: Props = $props();
+  const {
+    onOpenUrl,
+    onOpenFolder,
+    onBack,
+    onForward,
+    canGoBack,
+    canGoForward,
+    title,
+    busy
+  }: Props = $props();
   let url = $state('');
 
   function submit(ev: SubmitEvent) {
@@ -20,7 +33,54 @@
 <header class="address-bar">
   <div class="brand" aria-hidden="true">
     <span class="logo-mark">V</span>
-    <span class="logo-word">Visum</span>
+    <span class="logo-word">Vidi</span>
+  </div>
+
+  <div class="nav-arrows" role="group" aria-label="Navigation">
+    <button
+      type="button"
+      class="arrow"
+      onclick={onBack}
+      disabled={!canGoBack}
+      aria-label="Go back"
+      title="Back (⌘[)"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M10 3 L5 8 L10 13" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="arrow"
+      onclick={onForward}
+      disabled={!canGoForward}
+      aria-label="Go forward"
+      title="Forward (⌘])"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 3 L11 8 L6 13" />
+      </svg>
+    </button>
   </div>
 
   <form class="url-form" onsubmit={submit}>
@@ -79,6 +139,37 @@
     font-size: 1rem;
     letter-spacing: 0.02em;
     color: var(--ink);
+  }
+
+  .nav-arrows {
+    display: flex;
+    gap: 0.125rem;
+    flex: 0 0 auto;
+  }
+  .arrow {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .arrow:hover:not(:disabled) {
+    background: var(--chrome-hover);
+    color: var(--accent);
+  }
+  .arrow:disabled {
+    color: var(--ink-dim);
+    opacity: 0.4;
+    cursor: default;
+  }
+  .arrow:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
   }
 
   .url-form {

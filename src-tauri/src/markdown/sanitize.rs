@@ -2,7 +2,7 @@ use ammonia::Builder;
 use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
-/// Sanitize HTML using a strict allow-list tuned for the Visum markdown pipeline.
+/// Sanitize HTML using a strict allow-list tuned for the Vidi markdown pipeline.
 ///
 /// This is the single source of truth for what HTML may reach the webview.
 pub fn sanitize(html: &str) -> String {

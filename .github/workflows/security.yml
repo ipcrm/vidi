@@ -60,7 +60,7 @@ jobs:
 
           # fs plugin isn't currently wired in — fail if it ever lands without review.
           if grep -RiEn '"fs:scope-|"fs:allow-' src-tauri/capabilities; then
-            echo "::error::fs plugin permission detected. Visum reads files through its own commands and should not grant fs:* to the webview."
+            echo "::error::fs plugin permission detected. Vidi reads files through its own commands and should not grant fs:* to the webview."
             exit 1
           fi
 

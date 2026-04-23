@@ -58,7 +58,7 @@ mod tests {
 
     fn client() -> reqwest::Client {
         reqwest::Client::builder()
-            .user_agent("visum-test")
+            .user_agent("vidi-test")
             .build()
             .unwrap()
     }

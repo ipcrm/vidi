@@ -8,7 +8,7 @@ on:
 
 # One-time manual step: in repo Settings → Pages, set "Source" to
 # "GitHub Actions". No other configuration needed — this workflow does the
-# rest. Output: ipcrm.github.io/visum.
+# rest. Output: ipcrm.github.io/vidi.
 
 permissions:
   contents: read

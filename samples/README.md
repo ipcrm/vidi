@@ -6,9 +6,9 @@
 
 > **Flux** /flʌks/ · noun. A continuous flow or change; an unstable movement.
 
-Flux is a **fictional** data pipeline used as demo content for Visum. It has no
+Flux is a **fictional** data pipeline used as demo content for Vidi. It has no
 real code behind it — the point is to exercise every rendering feature of
-Visum: GFM tables, task lists, alerts, math, diagrams, code highlighting,
+Vidi: GFM tables, task lists, alerts, math, diagrams, code highlighting,
 footnotes, relative image paths, internal links, and external links.
 
 ## Table of contents
@@ -43,7 +43,7 @@ without review because this is demo content inside another project's
 
 ## Why this exists
 
-To help Visum prove that it can:
+To help Vidi prove that it can:
 
 - [x] Resolve relative `.md` links across folders
 - [x] Render local SVGs through the `asset://` protocol

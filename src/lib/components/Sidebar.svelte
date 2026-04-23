@@ -24,6 +24,17 @@
   }: Props = $props();
 
   let filter = $state('');
+  let treeEl: HTMLElement | undefined = $state();
+
+  /** Collapse every directory in the tree. If everything is already
+   *  collapsed, expand instead — same control, both directions. */
+  function toggleAllDirs() {
+    if (!treeEl) return;
+    const dirs = treeEl.querySelectorAll<HTMLDetailsElement>('.tree-dir');
+    if (dirs.length === 0) return;
+    const anyOpen = Array.from(dirs).some((d) => d.open);
+    for (const d of dirs) d.open = !anyOpen;
+  }
 
   // Remember each section's expanded state across reopens.
   const loadFlag = (key: string, def: boolean): boolean => {
@@ -39,11 +50,11 @@
     }
   };
 
-  let filesOpen = $state(loadFlag('visum:sidebar:files', true));
-  let tocOpen = $state(loadFlag('visum:sidebar:toc', true));
+  let filesOpen = $state(loadFlag('vidi:sidebar:files', true));
+  let tocOpen = $state(loadFlag('vidi:sidebar:toc', true));
 
-  $effect(() => saveFlag('visum:sidebar:files', filesOpen));
-  $effect(() => saveFlag('visum:sidebar:toc', tocOpen));
+  $effect(() => saveFlag('vidi:sidebar:files', filesOpen));
+  $effect(() => saveFlag('vidi:sidebar:toc', tocOpen));
 
   function rootLabel(path: string): string {
     const parts = path.split('/').filter(Boolean);
@@ -86,7 +97,7 @@
   <aside class="sidebar" aria-label="Navigation">
     <header class="sidebar-head">
       <h2 class="sidebar-title">
-        {tree ? rootLabel(tree.root) : docTitle ?? 'Visum'}
+        {tree ? rootLabel(tree.root) : docTitle ?? 'Vidi'}
       </h2>
       <button
         type="button"
@@ -113,15 +124,39 @@
       {#if filesOpen}
         <div class="section-body">
           {#if tree}
-            <input
-              class="filter"
-              type="search"
-              placeholder="Filter files…"
-              bind:value={filter}
-              aria-label="Filter files"
-            />
+            <div class="files-controls">
+              <input
+                class="filter"
+                type="search"
+                placeholder="Filter files…"
+                bind:value={filter}
+                aria-label="Filter files"
+              />
+              <button
+                type="button"
+                class="tree-tool"
+                onclick={toggleAllDirs}
+                title="Collapse / expand all folders"
+                aria-label="Collapse or expand all folders"
+              >
+                <svg
+                  viewBox="0 0 14 14"
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M2.5 5.5 L7 1.5 L11.5 5.5" />
+                  <path d="M2.5 12 L7 8 L11.5 12" />
+                </svg>
+              </button>
+            </div>
             <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-            <nav class="tree" role="tree" aria-label="Files">
+            <nav class="tree" role="tree" aria-label="Files" bind:this={treeEl}>
               {#each tree.nodes.filter(matches) as node (node.path)}
                 {@render renderNode(node, 0)}
               {/each}
@@ -365,16 +400,41 @@
     margin: 0;
   }
 
+  .files-controls {
+    display: flex;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem 0.5rem;
+  }
   .filter {
-    width: calc(100% - 1.25rem);
-    margin: 0.25rem 0.625rem 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 0.375rem 0.5rem;
     border: 1px solid var(--rule);
     border-radius: 4px;
     background: var(--paper);
     color: var(--ink);
     font: inherit;
-    display: block;
+  }
+  .tree-tool {
+    flex: 0 0 auto;
+    width: 28px;
+    display: grid;
+    place-items: center;
+    background: var(--paper);
+    color: var(--ink-dim);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .tree-tool:hover {
+    background: var(--chrome-hover);
+    color: var(--accent);
+  }
+  .tree-tool:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
   .tree {

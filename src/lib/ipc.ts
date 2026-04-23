@@ -74,6 +74,9 @@ export const ipc = {
   openExternal(url: string): Promise<void> {
     return invoke('open_external', { url });
   },
+  printPage(): Promise<void> {
+    return invoke('print_page');
+  },
   indexFolder(path: string): Promise<number> {
     return invoke('index_folder', { path });
   },
@@ -82,5 +85,8 @@ export const ipc = {
   },
   clearIndex(): Promise<void> {
     return invoke('clear_index');
+  },
+  takePendingOpens(): Promise<string[]> {
+    return invoke('take_pending_opens');
   }
 };

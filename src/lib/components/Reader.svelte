@@ -17,9 +17,10 @@
   interface Props {
     doc: RenderedDoc;
     onNavigate: (source: Source) => void;
+    onAnchorNavigate: (anchor: string) => void;
   }
 
-  const { doc, onNavigate }: Props = $props();
+  const { doc, onNavigate, onAnchorNavigate }: Props = $props();
 
   let container: HTMLElement | undefined = $state();
 
@@ -105,7 +106,7 @@
             // leave as-is
           }
         }
-        console.warn('[visum] image failed to load', {
+        console.warn('[vidi] image failed to load', {
           src,
           decoded: display,
           alt: img.alt,
@@ -225,23 +226,13 @@
       return;
     }
 
-    // Anchor-only link — scroll inside the reader container (default
-    // fragment navigation doesn't reliably scroll nested scroll containers).
+    // Anchor-only link — hand off to the parent, which scrolls and also
+    // pushes a history entry so back / forward work for in-doc jumps.
     const href = link.getAttribute('href') ?? '';
-    if (href.startsWith('#') && href.length > 1 && container) {
+    if (href.startsWith('#') && href.length > 1) {
       ev.preventDefault();
-      const id = decodeURIComponent(href.slice(1));
-      const target = container.querySelector<HTMLElement>(
-        `[id="${cssAttrEscape(id)}"]`
-      );
-      if (target) {
-        target.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      }
+      onAnchorNavigate(decodeURIComponent(href.slice(1)));
     }
-  }
-
-  function cssAttrEscape(s: string): string {
-    return s.replace(/["\\]/g, '\\$&');
   }
 </script>
 

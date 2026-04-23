@@ -2,6 +2,7 @@
   import type { Bookmark, Source } from '../types';
   import { ipc } from '../ipc';
   import { panels } from '../stores/panels.svelte';
+  import { session } from '../stores/session.svelte';
 
   interface Props {
     onOpen: (source: Source) => void;
@@ -25,15 +26,20 @@
     }
   }
 
-  // Reload whenever the panel opens.
+  // Reload whenever the panel opens OR the bookmarks version bumps (new
+  // bookmark added from anywhere, even while this panel was already open).
   $effect(() => {
-    if (panels.active === 'bookmarks') refresh();
+    if (panels.active !== 'bookmarks') return;
+    // Touch the reactive signal so Svelte re-runs this effect on changes.
+    void session.bookmarksVersion;
+    refresh();
   });
 
   async function remove(id: string) {
     try {
       await ipc.removeBookmark(id);
       bookmarks = bookmarks.filter((b) => b.id !== id);
+      session.bookmarksChanged();
     } catch (e) {
       error = formatError(e);
     }

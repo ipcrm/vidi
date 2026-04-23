@@ -1,4 +1,4 @@
-# Contributing to Visum
+# Contributing to Vidi
 
 Thanks for taking an interest. This document covers the dev environment, the
 commands you'll run during a typical cycle, and the PR workflow.
@@ -16,8 +16,8 @@ commands you'll run during a typical cycle, and the PR workflow.
 ## Setup
 
 ```sh
-git clone https://github.com/ipcrm/visum
-cd visum
+git clone https://github.com/ipcrm/vidi
+cd vidi
 pnpm install
 ```
 
@@ -94,5 +94,5 @@ manifests (`tauri.conf.json`, `package.json`, `Cargo.toml`) from the tag
 value, builds macOS arm64, macOS x64, Linux x64, and Windows x64 bundles, and
 publishes a GitHub Release with SHA256 checksums and SLSA build provenance.
 
-Docs redeploy to [ipcrm.github.io/visum](https://ipcrm.github.io/visum) on
+Docs redeploy to [ipcrm.github.io/vidi](https://ipcrm.github.io/vidi) on
 the same trigger.

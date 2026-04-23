@@ -138,7 +138,7 @@ impl<'a> LinkRewriter<'a> {
                         // which is an unterminated open, so we need to close the attr
                         // and the tag: `">`.  The External path emitted two <span>s.
                         // We need separate tracking.
-                        out.push(Event::Html(CowStr::Borrowed("__VISUM_IMG_END__")));
+                        out.push(Event::Html(CowStr::Borrowed("__VIDI_IMG_END__")));
                     } else {
                         out.push(Event::End(TagEnd::Image));
                     }
@@ -148,7 +148,7 @@ impl<'a> LinkRewriter<'a> {
         }
 
         // Post-process: walk the emitted event stream once more to fix up the
-        // `__VISUM_IMG_END__` sentinel — we can tell which kind of image we're
+        // `__VIDI_IMG_END__` sentinel — we can tell which kind of image we're
         // closing by looking back for the most recent `image-placeholder` or
         // `<img ` open that hasn't been closed.
         let out = fixup_image_closers(out);
@@ -160,7 +160,7 @@ impl<'a> LinkRewriter<'a> {
     }
 }
 
-/// Replace `__VISUM_IMG_END__` sentinels with the correct closing HTML based on
+/// Replace `__VIDI_IMG_END__` sentinels with the correct closing HTML based on
 /// which kind of image open preceded them.
 fn fixup_image_closers(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
     // Stack of "is external placeholder" flags.
@@ -171,7 +171,7 @@ fn fixup_image_closers(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
         match &ev {
             Event::Html(h) => {
                 let s = h.as_ref();
-                if s == "__VISUM_IMG_END__" {
+                if s == "__VIDI_IMG_END__" {
                     let was_external = stack.pop().unwrap_or(false);
                     if was_external {
                         out.push(Event::Html(CowStr::Borrowed("</span></span>")));

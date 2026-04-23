@@ -1,18 +1,18 @@
 [package]
-name = "visum"
+name = "vidi"
 version = "0.0.0"
-description = "Visum — a safe, newsprint-style Markdown reader."
-authors = ["Visum"]
+description = "Vidi — a safe, newsprint-style Markdown reader."
+authors = ["Vidi"]
 edition = "2021"
 rust-version = "1.77"
 
 [lib]
-name = "visum_lib"
+name = "vidi_lib"
 path = "src/lib.rs"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "visum"
+name = "vidi"
 path = "src/main.rs"
 
 [build-dependencies]

@@ -1,5 +1,6 @@
 pub mod error;
 pub mod markdown;
+pub mod menu;
 pub mod model;
 pub mod persistence;
 pub mod search;
@@ -7,13 +8,18 @@ pub mod sources;
 
 pub mod commands;
 
-use std::sync::Arc;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
 pub struct AppState {
     pub store: Arc<persistence::Store>,
     pub watchers: Arc<commands::watcher::WatcherRegistry>,
     pub search: Arc<search::SearchState>,
     pub http: reqwest::Client,
+    /// File paths handed to us by the OS ("Open With", drag-to-dock) while
+    /// the webview wasn't yet ready to receive a `vidi://open-paths` event.
+    /// Drained by the frontend on startup via `take_pending_opens`.
+    pub pending_opens: Mutex<Vec<PathBuf>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -29,6 +35,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .menu(menu::build)
+        .on_menu_event(|app, event| {
+            // Forward menu activations to the frontend. A single event stream
+            // `menu://action` keeps dispatch in one place on the JS side.
+            use tauri::Emitter;
+            let _ = app.emit("menu://action", event.id.as_ref());
+        })
         .setup(|app| {
             let handle = app.handle();
             let data_dir = handle
@@ -42,7 +55,7 @@ pub fn run() {
             let watchers = Arc::new(commands::watcher::WatcherRegistry::new());
             let search = Arc::new(search::SearchState::new());
             let http = reqwest::Client::builder()
-                .user_agent(concat!("Visum/", env!("CARGO_PKG_VERSION")))
+                .user_agent(concat!("Vidi/", env!("CARGO_PKG_VERSION")))
                 .gzip(true)
                 .brotli(true)
                 .build()
@@ -53,6 +66,7 @@ pub fn run() {
                 watchers,
                 search,
                 http,
+                pending_opens: Mutex::new(Vec::new()),
             });
             Ok(())
         })
@@ -75,12 +89,37 @@ pub fn run() {
             commands::persistence::get_settings,
             commands::persistence::set_settings,
             commands::remote::open_external,
+            commands::print::print_page,
             commands::search::index_folder,
             commands::search::search_folder,
             commands::search::clear_index,
+            commands::open_files::take_pending_opens,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running visum application");
+        .build(tauri::generate_context!())
+        .expect("error while building vidi application")
+        .run(|app, event| {
+            use tauri::{Emitter, RunEvent};
+            if let RunEvent::Opened { urls } = event {
+                // macOS "Open With" / drag-onto-dock sends file paths here.
+                // Collect them, stash for cold-launch drain, and emit a
+                // live event for the warm-launch case.
+                let paths: Vec<PathBuf> =
+                    urls.iter().filter_map(|u| u.to_file_path().ok()).collect();
+                if paths.is_empty() {
+                    return;
+                }
+                if let Some(state) = app.try_state::<AppState>() {
+                    if let Ok(mut pending) = state.pending_opens.lock() {
+                        pending.extend(paths.iter().cloned());
+                    }
+                }
+                let payload: Vec<String> = paths
+                    .into_iter()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect();
+                let _ = app.emit("vidi://open-paths", payload);
+            }
+        });
 }
 
 // Re-exports used by the manager.

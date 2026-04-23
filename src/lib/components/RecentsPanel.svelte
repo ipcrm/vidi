@@ -2,6 +2,7 @@
   import type { RecentFile, Source } from '../types';
   import { ipc } from '../ipc';
   import { panels } from '../stores/panels.svelte';
+  import { session } from '../stores/session.svelte';
 
   interface Props {
     onOpen: (source: Source) => void;
@@ -21,8 +22,12 @@
     }
   }
 
+  // Refresh when the panel opens and whenever a recent doc is added
+  // elsewhere — the version signal keeps the list fresh without a reload.
   $effect(() => {
-    if (panels.active === 'recents') refresh();
+    if (panels.active !== 'recents') return;
+    void session.recentsVersion;
+    refresh();
   });
 
   function describe(s: Source): string {

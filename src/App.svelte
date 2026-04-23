@@ -9,11 +9,17 @@
   import SearchPanel from './lib/components/SearchPanel.svelte';
   import FindBar from './lib/components/FindBar.svelte';
   import TabBar from './lib/components/TabBar.svelte';
+  import HelpDialog from './lib/components/HelpDialog.svelte';
   import { ipc } from './lib/ipc';
   import { session } from './lib/stores/session.svelte';
   import { theme } from './lib/stores/theme.svelte';
   import { panels } from './lib/stores/panels.svelte';
-  import type { FileNode, Source, WatchHandle } from './lib/types';
+  import {
+    sourceKey,
+    type FileNode,
+    type Source,
+    type WatchHandle
+  } from './lib/types';
   import { debounce } from './lib/util/debounce';
   import { open as openDialog } from '@tauri-apps/plugin-dialog';
   import { listen, type UnlistenFn } from '@tauri-apps/api/event';
@@ -21,19 +27,30 @@
   let scrollHost: HTMLElement | undefined = $state();
   let restoring = false;
   let findOpen = $state(false);
+  let helpOpen = $state(false);
   let watchHandle: WatchHandle | null = null;
   let unlisten: UnlistenFn | null = null;
+
+  // Scroll-restore dedup + suspension.
+  //   - `lastRestoredKey` avoids re-restoring when the current source is the
+  //     same but some other tab field changed (e.g. history index). Fixes the
+  //     "TOC click needs two clicks" bug where the restore effect was
+  //     overwriting the scroll-to-anchor that had just happened.
+  //   - `suspendRestore` is raised while we're running an explicit navigation
+  //     (back / forward), so the restore effect doesn't fight us on scroll.
+  let lastRestoredKey: string | null = null;
+  let suspendRestore = false;
 
   // Sidebar collapsed state — persisted to localStorage so it sticks.
   let sidebarCollapsed = $state(
     typeof localStorage !== 'undefined' &&
-      localStorage.getItem('visum:sidebar-collapsed') === '1'
+      localStorage.getItem('vidi:sidebar-collapsed') === '1'
   );
   function toggleSidebar() {
     sidebarCollapsed = !sidebarCollapsed;
     try {
       localStorage.setItem(
-        'visum:sidebar-collapsed',
+        'vidi:sidebar-collapsed',
         sidebarCollapsed ? '1' : '0'
       );
     } catch {
@@ -68,6 +85,19 @@
     const doc = session.doc;
     const el = scrollHost;
     if (!src || !doc || !el) return;
+
+    // Svelte re-fires this effect whenever any field on the active tab
+    // mutates — including history-index updates from back/forward and
+    // anchor pushes from TOC clicks. We only want to restore when the
+    // source truly changes, so we track the last-restored key and bail
+    // out for redundant runs. Also suspended while an explicit history
+    // navigation is in flight.
+    const key = sourceKey(src);
+    if (suspendRestore || key === lastRestoredKey) {
+      lastRestoredKey = key;
+      return;
+    }
+    lastRestoredKey = key;
 
     restoring = true;
     saveScroll.cancel();
@@ -205,7 +235,7 @@
 
   async function openSource(
     source: Source,
-    opts?: { silent?: boolean; newTab?: boolean }
+    opts?: { silent?: boolean; newTab?: boolean; anchor?: string | null }
   ) {
     if (opts?.newTab) session.newTab();
     if (!opts?.silent) session.setLoading(true);
@@ -213,7 +243,16 @@
       const doc = await ipc.renderMarkdown(source);
       session.setDoc(doc, source);
       const title = doc.title ?? describeSource(source);
-      await ipc.pushRecent(source, title).catch(() => {});
+      if (!opts?.silent) {
+        // Record this navigation. File-watcher hot-reloads and
+        // back/forward-driven navigations pass silent:true so they
+        // don't pollute the history stack or the recents list.
+        session.pushHistoryEntry({ source, anchor: opts?.anchor ?? null });
+        ipc
+          .pushRecent(source, title)
+          .then(() => session.recentsChanged())
+          .catch(() => {});
+      }
     } catch (e) {
       session.setLoadError(formatError(e));
     } finally {
@@ -311,6 +350,58 @@
     }
   }
 
+  /** Navigate to an anchor within the current doc, pushing a history entry. */
+  function navigateToAnchor(anchor: string) {
+    const src = session.source;
+    if (!src) return;
+    session.pushHistoryEntry({ source: src, anchor });
+    scrollToAnchor(anchor);
+  }
+
+  /** Navigate to a history entry without pushing a new one. */
+  async function goToEntry(source: Source, anchor: string | null) {
+    const current = session.source;
+    const same = current && sourceKey(current) === sourceKey(source);
+    if (!same) {
+      await openSource(source, { silent: true });
+    }
+    // Wait a frame so the new HTML is laid out before scrolling.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    if (anchor) {
+      scrollToAnchor(anchor);
+    } else if (scrollHost) {
+      scrollHost.scrollTop = 0;
+    }
+  }
+
+  async function handleBack() {
+    // Raise the suspend BEFORE mutating state. session.goBack updates the
+    // tab's historyIndex, which triggers the restore effect; we need the
+    // flag already up by the time that effect runs (next microtask) so it
+    // doesn't race scrollToAnchor / scrollTop=0.
+    suspendRestore = true;
+    try {
+      const entry = session.goBack();
+      if (entry) await goToEntry(entry.source, entry.anchor);
+    } finally {
+      setTimeout(() => {
+        suspendRestore = false;
+      }, 80);
+    }
+  }
+
+  async function handleForward() {
+    suspendRestore = true;
+    try {
+      const entry = session.goForward();
+      if (entry) await goToEntry(entry.source, entry.anchor);
+    } finally {
+      setTimeout(() => {
+        suspendRestore = false;
+      }, 80);
+    }
+  }
+
   // --- Keyboard shortcuts --------------------------------------------------
 
   async function addBookmark() {
@@ -319,60 +410,169 @@
     const label = session.doc?.title ?? describeSource(src);
     try {
       await ipc.addBookmark(src, label);
+      session.bookmarksChanged();
       panels.open('bookmarks');
     } catch (e) {
       session.setLoadError(formatError(e));
     }
   }
 
+  // All command shortcuts live on the native menu (see src-tauri/src/menu.rs).
+  // The menu's accelerators intercept keystrokes before the webview sees them,
+  // and each click / accelerator emits a `menu://action` event with a stable
+  // id that we dispatch below. The only keystroke we keep in JS is the bare
+  // `?` help shortcut, since native-menu accelerators can't bind plain keys.
   function onKey(ev: KeyboardEvent) {
+    if (ev.key === '?' && !ev.metaKey && !ev.ctrlKey) {
+      const t = ev.target as HTMLElement | null;
+      const tag = t?.tagName;
+      const inField =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        (t as HTMLElement | null)?.isContentEditable === true;
+      if (!inField) {
+        ev.preventDefault();
+        helpOpen = !helpOpen;
+      }
+    }
+
+    // ⌘⇥ / ⌘⇧⇥ for next / previous tab and ⌘1-9 for jump-by-index: these
+    // are not in the native menu because binding Tab / digits there is
+    // platform-finicky. Keep them as JS shortcuts.
     const mod = ev.metaKey || ev.ctrlKey;
     if (!mod) return;
-
-    if (ev.key === 'o') {
-      ev.preventDefault();
-      onOpenFolder();
-    } else if (ev.key === 't') {
-      ev.preventDefault();
-      newBlankTab();
-    } else if (ev.key === 'w') {
-      ev.preventDefault();
-      closeActiveTab();
-    } else if (ev.key === 'Tab') {
+    if (ev.key === 'Tab') {
       ev.preventDefault();
       if (ev.shiftKey) session.prevTab();
       else session.nextTab();
     } else if (/^[1-9]$/.test(ev.key)) {
       ev.preventDefault();
-      const n = parseInt(ev.key, 10) - 1;
-      session.activateByIndex(n);
-    } else if (ev.key === 'b') {
-      ev.preventDefault();
-      panels.toggle('bookmarks');
-    } else if (ev.key === 'y' || (ev.key === 'h' && ev.shiftKey)) {
-      ev.preventDefault();
-      panels.toggle('recents');
-    } else if (ev.key === 'd') {
-      ev.preventDefault();
-      addBookmark();
-    } else if (ev.key === 'f') {
-      ev.preventDefault();
-      if (ev.shiftKey) {
-        panels.toggle('search');
-      } else {
-        findOpen = true;
-      }
-    } else if (ev.key === ',') {
-      ev.preventDefault();
-      panels.toggle('settings');
-    } else if (ev.key === 'p') {
-      ev.preventDefault();
-      window.print();
-    } else if (ev.key === '\\') {
-      ev.preventDefault();
-      toggleSidebar();
+      session.activateByIndex(parseInt(ev.key, 10) - 1);
     }
   }
+
+  // --- Menu event dispatch -------------------------------------------------
+  async function dispatchMenuAction(id: string) {
+    switch (id) {
+      case 'open_file':
+        await onOpenFile();
+        break;
+      case 'open_folder':
+        await onOpenFolder();
+        break;
+      case 'open_recents':
+      case 'panel_recents':
+        panels.toggle('recents');
+        break;
+      case 'new_tab':
+        newBlankTab();
+        break;
+      case 'close_tab':
+        closeActiveTab();
+        break;
+      case 'bookmark':
+        await addBookmark();
+        break;
+      case 'print':
+        ipc.printPage().catch((err) => console.warn('print failed:', err));
+        break;
+      case 'toggle_sidebar':
+        toggleSidebar();
+        break;
+      case 'panel_bookmarks':
+        panels.toggle('bookmarks');
+        break;
+      case 'panel_settings':
+        panels.toggle('settings');
+        break;
+      case 'search_folder':
+        panels.toggle('search');
+        break;
+      case 'find_in_doc':
+        findOpen = true;
+        break;
+      case 'toggle_theme':
+        toggleTheme();
+        break;
+      case 'help_shortcuts':
+        helpOpen = !helpOpen;
+        break;
+      case 'help_docs':
+        await ipc
+          .openExternal('https://ipcrm.github.io/vidi')
+          .catch(() => {});
+        break;
+      case 'go_back':
+        await handleBack();
+        break;
+      case 'go_forward':
+        await handleForward();
+        break;
+    }
+  }
+
+  async function onOpenFile() {
+    const selected = await openDialog({
+      multiple: false,
+      filters: [{ name: 'Markdown', extensions: ['md', 'markdown'] }]
+    });
+    if (typeof selected !== 'string') return;
+    const cur = session.source;
+    await openSource(
+      { kind: 'localFile', path: selected },
+      { newTab: !!cur }
+    );
+  }
+
+  // Open .md files handed to us by the OS (macOS "Open With", drag-to-dock).
+  async function openFilesFromOS(paths: string[]) {
+    for (const path of paths) {
+      if (!/\.(md|markdown)$/i.test(path)) continue;
+      const cur = session.source;
+      await openSource(
+        { kind: 'localFile', path },
+        { newTab: !!cur }
+      );
+    }
+  }
+
+  let unlistenMenu: UnlistenFn | null = null;
+  let unlistenOpen: UnlistenFn | null = null;
+  $effect(() => {
+    (async () => {
+      unlistenMenu = await listen<string>('menu://action', (ev) => {
+        dispatchMenuAction(ev.payload).catch((err) =>
+          console.warn('menu action failed:', ev.payload, err)
+        );
+      });
+
+      // Subsequent OS-opens while the app is already running.
+      unlistenOpen = await listen<string[]>('vidi://open-paths', (ev) => {
+        openFilesFromOS(ev.payload).catch((err) =>
+          console.warn('open paths failed:', err)
+        );
+      });
+
+      // Drain any paths that landed before the webview was ready (cold
+      // launch via "Open With" on macOS).
+      try {
+        const pending = await ipc.takePendingOpens();
+        if (pending.length > 0) await openFilesFromOS(pending);
+      } catch (err) {
+        console.warn('drain pending opens failed:', err);
+      }
+    })();
+    return () => {
+      if (unlistenMenu) {
+        unlistenMenu();
+        unlistenMenu = null;
+      }
+      if (unlistenOpen) {
+        unlistenOpen();
+        unlistenOpen = null;
+      }
+    };
+  });
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -385,6 +585,10 @@
   <AddressBar
     title={session.doc?.title ?? null}
     busy={session.loading}
+    canGoBack={session.canGoBack}
+    canGoForward={session.canGoForward}
+    onBack={handleBack}
+    onForward={handleForward}
     {onOpenUrl}
     {onOpenFolder}
   />
@@ -397,7 +601,7 @@
       current={currentPath}
       collapsed={sidebarCollapsed}
       onOpen={(s) => openSource(s)}
-      onTocClick={scrollToAnchor}
+      onTocClick={navigateToAnchor}
       onToggle={toggleSidebar}
     />
 
@@ -410,25 +614,69 @@
       {:else if session.loading}
         <div class="state loading">Loading…</div>
       {:else if session.doc}
-        <Reader doc={session.doc} onNavigate={(s) => openSource(s)} />
+        <Reader
+          doc={session.doc}
+          onNavigate={(s) => openSource(s)}
+          onAnchorNavigate={navigateToAnchor}
+        />
       {:else}
         <div class="state empty">
-          <h2 class="empty-title">Visum</h2>
-          <p>Open a folder of markdown files, or paste a GitHub URL above.</p>
-          <p class="shortcuts">
-            <kbd>⌘O</kbd> open folder ·
-            <kbd>⌘T</kbd> new tab ·
-            <kbd>⌘W</kbd> close tab ·
-            <kbd>⌘⇥</kbd> next tab ·
-            <kbd>⌘\</kbd> toggle sidebar
+          <h2 class="empty-title">Vidi</h2>
+          <p class="empty-sub">
+            Open a folder of markdown files, or paste a GitHub URL above.
           </p>
-          <p class="shortcuts">
-            <kbd>⌘B</kbd> bookmarks ·
-            <kbd>⌘F</kbd> find ·
-            <kbd>⌘⇧F</kbd> search folder ·
-            <kbd>⌘P</kbd> print ·
-            <kbd>⌘,</kbd> settings
-          </p>
+
+          <dl class="shortcut-list" aria-label="Keyboard shortcuts">
+            <dt>Open</dt>
+            <dd><kbd>⌘O</kbd> open folder</dd>
+
+            <dt>Tabs</dt>
+            <dd>
+              <kbd>⌘T</kbd> new tab ·
+              <kbd>⌘W</kbd> close tab ·
+              <kbd>⌘⇥</kbd> / <kbd>⌘⇧⇥</kbd> next / previous ·
+              <kbd>⌘1</kbd>…<kbd>⌘9</kbd> jump to tab
+            </dd>
+
+            <dt>Navigation</dt>
+            <dd>
+              <kbd>⌘[</kbd> back ·
+              <kbd>⌘]</kbd> forward
+            </dd>
+
+            <dt>Layout</dt>
+            <dd>
+              <kbd>⌘\</kbd> toggle sidebar
+            </dd>
+
+            <dt>Search</dt>
+            <dd>
+              <kbd>⌘F</kbd> find in document ·
+              <kbd>⌘⇧F</kbd> search across folder
+            </dd>
+
+            <dt>Bookmarks</dt>
+            <dd>
+              <kbd>⌘D</kbd> bookmark current doc ·
+              <kbd>⌘B</kbd> bookmarks panel ·
+              <kbd>⌘Y</kbd> recents panel
+            </dd>
+
+            <dt>Settings</dt>
+            <dd>
+              <kbd>⌘,</kbd> open settings
+            </dd>
+
+            <dt>Print</dt>
+            <dd>
+              <kbd>⌘P</kbd> print / save as PDF
+            </dd>
+
+            <dt>Help</dt>
+            <dd>
+              <kbd>?</kbd> or <kbd>⌘/</kbd> show this list anywhere
+            </dd>
+          </dl>
         </div>
       {/if}
     </main>
@@ -494,6 +742,8 @@
   </button>
 
   <ConfirmDialog />
+
+  <HelpDialog open={helpOpen} onClose={() => (helpOpen = false)} />
 </div>
 
 <style>
@@ -561,19 +811,45 @@
     color: var(--ink);
     margin-bottom: 0.25rem;
   }
-  .shortcuts {
-    margin-top: 2rem;
-    font-size: 0.8125rem;
+  .empty-sub {
+    color: var(--ink-dim);
+    margin-bottom: 2rem;
+  }
+
+  .shortcut-list {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.45rem 1.25rem;
+    margin: 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid var(--rule);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .shortcut-list dt {
+    font-family: var(--font-ui, system-ui);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    align-self: center;
+  }
+  .shortcut-list dd {
+    margin: 0;
     color: var(--ink-dim);
   }
-  .shortcuts kbd {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    padding: 0.1rem 0.3rem;
+  .shortcut-list kbd {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.72rem;
+    padding: 0.12rem 0.4rem;
     border: 1px solid var(--rule);
     border-radius: 3px;
     background: var(--paper);
-    margin-right: 0.15rem;
+    color: var(--ink);
+    margin-right: 0.1rem;
+    white-space: nowrap;
   }
 
   .theme-toggle {

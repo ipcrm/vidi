@@ -1,9 +1,9 @@
 {
-  "name": "visum",
+  "name": "vidi",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Visum — a safe, newsprint-style Markdown reader built on Tauri.",
+  "description": "Vidi — a safe, newsprint-style Markdown reader built on Tauri.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -1,13 +1,17 @@
-import type { FileTree, RenderedDoc, Source } from '../types';
+import { sourceKey, type FileTree, type RenderedDoc, type Source } from '../types';
 
 /**
- * Multi-tab session.
+ * Multi-tab session with per-tab back/forward history.
  *
- * Each tab holds its own document, folder tree, loading/error state. Trusted
- * hosts and the "session" API surface (doc/source/tree/loading/loadError/
- * setDoc/setLoading/setLoadError/setTree) delegate to the active tab so the
- * rest of the app can stay tab-agnostic.
+ * Each tab holds its own document, folder tree, loading/error state, and a
+ * browser-style navigation stack. Trusted hosts stay session-wide.
  */
+
+/** One entry in a tab's navigation history. */
+export interface HistoryEntry {
+  source: Source;
+  anchor: string | null;
+}
 
 export interface Tab {
   id: string;
@@ -16,7 +20,12 @@ export interface Tab {
   tree: FileTree | null;
   loading: boolean;
   loadError: string | null;
+  history: HistoryEntry[];
+  /** Index into `history` for the currently-displayed entry, or -1 if empty. */
+  historyIndex: number;
 }
+
+const MAX_HISTORY = 100;
 
 function newBlankTab(): Tab {
   return {
@@ -25,7 +34,9 @@ function newBlankTab(): Tab {
     source: null,
     tree: null,
     loading: false,
-    loadError: null
+    loadError: null,
+    history: [],
+    historyIndex: -1
   };
 }
 
@@ -33,6 +44,11 @@ function createSession() {
   let tabs: Tab[] = $state([newBlankTab()]);
   let activeId: string = $state(tabs[0].id);
   let trustedHosts: Set<string> = $state(new Set());
+
+  // Monotonic "something changed" counters used by panels to decide when to
+  // re-fetch from disk. Cheaper than a full pub-sub for a handful of stores.
+  let bookmarksVersion = $state(0);
+  let recentsVersion = $state(0);
 
   function findActive(): Tab {
     return tabs.find((t) => t.id === activeId) ?? tabs[0];
@@ -99,6 +115,82 @@ function createSession() {
     },
     isHostTrusted(host: string): boolean {
       return trustedHosts.has(host);
+    },
+
+    // --- Change signals -------------------------------------------------
+    get bookmarksVersion() {
+      return bookmarksVersion;
+    },
+    get recentsVersion() {
+      return recentsVersion;
+    },
+    bookmarksChanged() {
+      bookmarksVersion += 1;
+    },
+    recentsChanged() {
+      recentsVersion += 1;
+    },
+
+    // --- Back / forward history ---------------------------------------
+    get canGoBack() {
+      return findActive().historyIndex > 0;
+    },
+    get canGoForward() {
+      const t = findActive();
+      return t.historyIndex < t.history.length - 1;
+    },
+    /**
+     * Push an entry onto the active tab's history. Truncates any
+     * forward entries (browser-style: navigating from the middle of the
+     * stack drops the forward tail).
+     *
+     * If the incoming entry is identical to the current head (same source
+     * + same anchor), this is a no-op — keeps the stack tidy across
+     * rapid re-renders of the same thing.
+     */
+    pushHistoryEntry(entry: HistoryEntry) {
+      const i = tabs.findIndex((t) => t.id === activeId);
+      if (i === -1) return;
+      const tab = tabs[i];
+      const current = tab.history[tab.historyIndex];
+      if (
+        current &&
+        sourceKey(current.source) === sourceKey(entry.source) &&
+        (current.anchor ?? null) === (entry.anchor ?? null)
+      ) {
+        return;
+      }
+      const truncated = tab.history.slice(0, tab.historyIndex + 1);
+      truncated.push(entry);
+      const capped =
+        truncated.length > MAX_HISTORY
+          ? truncated.slice(truncated.length - MAX_HISTORY)
+          : truncated;
+      tabs[i] = {
+        ...tab,
+        history: capped,
+        historyIndex: capped.length - 1
+      };
+    },
+    /** Step the history cursor backward; returns the entry to navigate to. */
+    goBack(): HistoryEntry | null {
+      const i = tabs.findIndex((t) => t.id === activeId);
+      if (i === -1) return null;
+      const tab = tabs[i];
+      if (tab.historyIndex <= 0) return null;
+      const next = tab.history[tab.historyIndex - 1];
+      tabs[i] = { ...tab, historyIndex: tab.historyIndex - 1 };
+      return next;
+    },
+    /** Step the history cursor forward; returns the entry to navigate to. */
+    goForward(): HistoryEntry | null {
+      const i = tabs.findIndex((t) => t.id === activeId);
+      if (i === -1) return null;
+      const tab = tabs[i];
+      if (tab.historyIndex >= tab.history.length - 1) return null;
+      const next = tab.history[tab.historyIndex + 1];
+      tabs[i] = { ...tab, historyIndex: tab.historyIndex + 1 };
+      return next;
     },
 
     // --- Tab management ------------------------------------------------

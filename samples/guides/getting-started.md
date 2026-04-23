@@ -53,7 +53,7 @@ flux --version
 - If you prefer to start from the end, read the [changelog](../changelog.md).
 
 > [!IMPORTANT]
-> None of the commands above do anything. They exist so Visum has realistic
+> None of the commands above do anything. They exist so Vidi has realistic
 > looking fenced code to highlight, and realistic-looking links to resolve.
 
 ## Inline checklist for first-time sanity

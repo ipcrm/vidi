@@ -97,27 +97,30 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building vidi application")
-        .run(|app, event| {
-            use tauri::{Emitter, RunEvent};
-            if let RunEvent::Opened { urls } = event {
-                // macOS "Open With" / drag-onto-dock sends file paths here.
-                // Collect them, stash for cold-launch drain, and emit a
-                // live event for the warm-launch case.
-                let paths: Vec<PathBuf> =
-                    urls.iter().filter_map(|u| u.to_file_path().ok()).collect();
-                if paths.is_empty() {
-                    return;
-                }
-                if let Some(state) = app.try_state::<AppState>() {
-                    if let Ok(mut pending) = state.pending_opens.lock() {
-                        pending.extend(paths.iter().cloned());
+        .run(|_app, _event| {
+            // `RunEvent::Opened` is macOS-only ("Open With" / drag-onto-dock).
+            // The variant isn't defined on other platforms, so the whole
+            // handler is gated.
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::{Emitter, RunEvent};
+                if let RunEvent::Opened { urls } = _event {
+                    let paths: Vec<PathBuf> =
+                        urls.iter().filter_map(|u| u.to_file_path().ok()).collect();
+                    if paths.is_empty() {
+                        return;
                     }
+                    if let Some(state) = _app.try_state::<AppState>() {
+                        if let Ok(mut pending) = state.pending_opens.lock() {
+                            pending.extend(paths.iter().cloned());
+                        }
+                    }
+                    let payload: Vec<String> = paths
+                        .into_iter()
+                        .map(|p| p.to_string_lossy().to_string())
+                        .collect();
+                    let _ = _app.emit("vidi://open-paths", payload);
                 }
-                let payload: Vec<String> = paths
-                    .into_iter()
-                    .map(|p| p.to_string_lossy().to_string())
-                    .collect();
-                let _ = app.emit("vidi://open-paths", payload);
             }
         });
 }

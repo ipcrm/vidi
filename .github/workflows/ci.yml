@@ -45,6 +45,24 @@ jobs:
         with:
           workspaces: src-tauri -> target
 
+      # `tauri::generate_context!()` validates that `frontendDist` exists at
+      # macro-expansion time, so clippy/test need a built frontend.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Build frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
       - name: cargo fmt --check
         run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 

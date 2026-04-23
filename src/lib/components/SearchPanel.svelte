@@ -52,16 +52,22 @@
     return String(e);
   }
 
-  function highlight(snippet: string, q: string): string {
-    if (!q.trim()) return escape(snippet);
+  // Compile the highlight RegExp once per query, not once per hit. Called
+  // 30× per render; the old form was building a fresh regex each time.
+  const highlightRe = $derived.by((): RegExp | null => {
+    const q = query.trim();
+    if (!q) return null;
     const terms = q
-      .trim()
       .split(/\s+/)
       .filter(Boolean)
       .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    if (terms.length === 0) return escape(snippet);
-    const re = new RegExp(`(${terms.join('|')})`, 'gi');
-    return escape(snippet).replace(re, '<mark>$1</mark>');
+    if (terms.length === 0) return null;
+    return new RegExp(`(${terms.join('|')})`, 'gi');
+  });
+
+  function highlight(snippet: string): string {
+    const esc = escape(snippet);
+    return highlightRe ? esc.replace(highlightRe, '<mark>$1</mark>') : esc;
   }
 
   function escape(s: string): string {
@@ -123,7 +129,7 @@
             <span class="title">{h.title}</span>
             <span class="path">{relativize(h.path)}</span>
             <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            <span class="snippet">{@html highlight(h.snippet, query)}</span>
+            <span class="snippet">{@html highlight(h.snippet)}</span>
           </button>
         </li>
       {/each}

@@ -141,28 +141,30 @@
 
   // --- Folder watcher ------------------------------------------------------
 
+  // Only rewatch when the root path actually changes. setTree() replaces
+  // the tree object on every debounced refresh, so this effect would
+  // otherwise tear down + rebuild the OS watcher on every file-change
+  // burst — an expensive recursive re-walk that pinned the CPU.
+  let lastWatchedRoot: string | null = null;
   $effect(() => {
-    const tree = session.tree;
-    if (!tree) return;
-    (async () => {
-      if (watchHandle) {
-        await ipc.unwatchFolder(watchHandle).catch(() => {});
-        watchHandle = null;
-      }
-      try {
-        watchHandle = await ipc.watchFolder(tree.root);
-      } catch {
-        // Non-fatal — watcher is a convenience.
-      }
-    })();
+    const root = session.tree?.root ?? null;
+    if (root === lastWatchedRoot) return;
+    lastWatchedRoot = root;
 
-    return () => {
+    (async () => {
       if (watchHandle) {
         const h = watchHandle;
         watchHandle = null;
-        ipc.unwatchFolder(h).catch(() => {});
+        await ipc.unwatchFolder(h).catch(() => {});
       }
-    };
+      if (root) {
+        try {
+          watchHandle = await ipc.watchFolder(root);
+        } catch {
+          // Non-fatal — watcher is a convenience.
+        }
+      }
+    })();
   });
 
   // Coalesce multiple watcher events into at most one tree-refresh and one

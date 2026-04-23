@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+
   interface Props {
     container: HTMLElement | undefined;
     open: boolean;
@@ -21,10 +23,20 @@
     }
   });
 
-  // Re-run search when query or container content changes.
+  // Re-run search when open, query, or container changes.
+  //
+  // `runSearch` writes `ranges` and `active` and then reads them back
+  // (directly and via `focusActive`). Without `untrack`, those reads
+  // would register the state as dependencies of this effect — and the
+  // effect's own writes would then schedule another run, looping
+  // forever (each iteration tearing down and re-inserting every
+  // <mark.find-match> in the document ⇒ 99% CPU).
   $effect(() => {
     if (!open) return;
-    runSearch();
+    // Explicit dep tracking on the real inputs.
+    void query;
+    void container;
+    untrack(() => runSearch());
   });
 
   function clear() {

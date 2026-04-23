@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5F1E9"/>
+      <stop offset="1" stop-color="#E7DED5"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="0" dy="7"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- rounded square background (squircle-ish corner) -->
+  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="url(#bg)"/>
+
+  <!-- Big V -->
+  <text x="256" y="340"
+        font-family="Didot, 'Hoefler Text', Baskerville, serif"
+        font-size="380" font-weight="700"
+        text-anchor="middle" fill="#7A3218"
+        filter="url(#softShadow)">V</text>
+
+  <!-- Double rule divider -->
+  <line x1="160" y1="388" x2="352" y2="388" stroke="#3A2218" stroke-width="1.6"/>
+  <line x1="160" y1="394" x2="352" y2="394" stroke="#3A2218" stroke-width="1.6"/>
+
+  <!-- VIDI caption -->
+  <text x="256" y="444"
+        font-family="Didot, 'Hoefler Text', Baskerville, serif"
+        font-size="30" font-weight="400"
+        text-anchor="middle" fill="#3A2218"
+        letter-spacing="7">VIDI</text>
+</svg>

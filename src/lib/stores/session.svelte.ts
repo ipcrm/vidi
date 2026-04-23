@@ -41,8 +41,9 @@ function newBlankTab(): Tab {
 }
 
 function createSession() {
-  let tabs: Tab[] = $state([newBlankTab()]);
-  let activeId: string = $state(tabs[0].id);
+  const firstTab = newBlankTab();
+  let tabs: Tab[] = $state([firstTab]);
+  let activeId: string = $state(firstTab.id);
   let trustedHosts: Set<string> = $state(new Set());
 
   // Monotonic "something changed" counters used by panels to decide when to

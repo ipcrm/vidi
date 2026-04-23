@@ -1,11 +1,15 @@
 # Vidi
 
+### A newsprint-style markdown reader that runs locally.
+
+Open a folder of notes, a GitHub README, or any public markdown URL.
+Everything renders through a sanitized Rust pipeline — no third-party
+scripts ever reach the page — and your data never leaves your machine.
+
 ![Vidi rendering The Colophon Tribune, a newspaper-style markdown sample, with sidebar, table of contents, and pull-quote](./docs/screenshots/reader.png)
 
-> **Vidi** /ˈwiː.diː/ · Latin, first-person perfect of *vidēre*, "to see."
-> *"I saw."* The viewing half of Caesar's *veni, vidi, vici*.
-
-Newsprint-style markdown reader that runs locally.
+<sub>**Vidi** /ˈwiː.diː/ · Latin, first-person perfect of *vidēre*, "to see."
+*"I saw."* The viewing half of Caesar's *veni, vidi, vici*.</sub>
 
 ## Download
 

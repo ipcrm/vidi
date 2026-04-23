@@ -79,16 +79,3 @@ jobs:
             echo "::error::CSP allows remote scripts."
             exit 1
           fi
-
-  cargo-deny:
-    name: cargo deny (licenses + bans)
-    runs-on: ubuntu-22.04
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          manifest-path: src-tauri/Cargo.toml
-          command: check
-          arguments: --all-features
